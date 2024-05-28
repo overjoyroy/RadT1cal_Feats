@@ -1,3 +1,5 @@
+#bin/python3
+
 import nibabel as nib
 import nipy as nipy
 import nipype.interfaces.io as nio          # Data i/o
@@ -50,8 +52,8 @@ outDir        = args.ourDir[0]
 outDirName    = 'str_preproc'
 
 session = vetArgNone(args.session_id, None)
-template_path = vetArgNone(args.template, './Template/MNI152lin_T1_2mm_brain.nii.gz')
-segment_path = vetArgNone(args.segment, './Template/AAL3v1_CombinedThalami.nii.gz')
+template_path = vetArgNone(args.template, '/app/Template/MNI152lin_T1_2mm_brain.nii.gz')
+segment_path = vetArgNone(args.segment, '/app/Template/AAL3v1_CombinedThalami.nii.gz')
 enforceBIDS   = True
 
 if enforceBIDS:
