@@ -10,7 +10,7 @@ The preprocessing pipeline includes four primary steps:
 2. **Skull Stripping** - Removing non-brain tissues from the MRI images.
 3. **Bias Correction** - Correcting intensity non-uniformities in the MRI images.
 4. **Registration** - Aligning an atlas to the patient space for standardized anatomical referencing.
-5. **Radiomics** - Calculating and collecting first order radiomics features per ROI
+5. **Volume and Radiomic Feature Calculation** - Calculating and collecting volume and first order radiomics features per ROI
 
 ## Features
 
@@ -31,7 +31,7 @@ At minimum:
 
 1. **Preprocessed Patient T1 MRI**: The MRI after all preprocessing steps.
 2. **Atlas in Patient Space**: An atlas registered to the patient’s anatomical space.
-3. **Radiomics Features**: Radiomics features per ROI
+3. **Volume and Radiomics Features**: Volume and Radiomics features per ROI
 
 ## Usage Instructions
 
