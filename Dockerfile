@@ -1,5 +1,8 @@
 FROM jor115/neurodocker
 
+RUN python3 -m pip install \
+	pyradiomics
+
 COPY . /app
 
 # Set FSL environment variables
