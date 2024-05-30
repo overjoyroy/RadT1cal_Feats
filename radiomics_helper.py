@@ -30,42 +30,81 @@ def create_binaryROI_mask(nifti_path, roi_value, output_path=None):
     else:
         return None
 
-def getAllROIFeats(aal, brain, maxROI):    
+def getROIVolume(brain_path, roi_mask_path):
+    import nibabel as nib
+    import numpy as np
+
+    # Load the T1-weighted MRI and ROI mask (assuming both are NIfTI files)
+    t1_img = nib.load(brain_path)
+    roi_mask = nib.load(roi_mask_path)
+
+    # Extract the data arrays
+    t1_data = t1_img.get_fdata()
+    roi_data = roi_mask.get_fdata()
+
+    # Ensure the ROI mask is binary (1 for ROI, 0 for background)
+    roi_data = roi_data > 0
+
+    # Calculate the voxel volume (assuming the affine matrix has the voxel dimensions)
+    voxel_dims = t1_img.header.get_zooms()
+    voxel_volume = np.prod(voxel_dims)
+
+    # Count the number of voxels in the ROI
+    num_voxels_in_roi = np.count_nonzero(roi_data)
+
+    # Calculate the total volume of the ROI
+    roi_volume = num_voxels_in_roi * voxel_volume
+
+    return roi_volume
+
+def getAllROIFeats(atlas, brain, maxROI):    
     featVecs = {}
-    maxROI = 2
+    volVecs  = {}
     for i in range(0,maxROI+1):
-        roi_mask = create_binaryROI_mask(aal, i, output_path = os.getcwd())
+        roi_mask = create_binaryROI_mask(atlas, i, output_path = os.getcwd())
         if roi_mask == None:
             continue
-            
+
+        # Volume
+        roi_vol = getROIVolume(brain, roi_mask)
+        volVecs[i] = roi_vol
+        
+        # Radiomics
         extractor = radiomics.featureextractor.RadiomicsFeatureExtractor()
         extractor.disableAllFeatures()
         extractor.enableFeatureClassByName('firstorder')
         # Alternative; only enable 'Mean' and 'Skewness' features in firstorder
         # extractor.enableFeaturesByName(firstorder=['Mean', 'Skewness'])
-    
         featureVector = extractor.execute(brain, roi_mask)
         featVecs[i] = featureVector
+
+        # Clean-up
         os.remove(roi_mask)
 
-    return featVecs
+    return volVecs, featVecs 
 
-def getAndStoreROIFeats(aal, brain, maxROI, outpath=None):    
-    f = getAllROIFeats(aal, brain, maxROI)
+def saveOutput(data, atlas, suffix, outpath=None):
+    if outpath == None:
+        outpath = os.path.join(os.getcwd(), '{}_{}.csv'.format(os.path.basename(atlas)[:-7], suffix))
+    elif os.isDir(outpath):
+        outpath = os.path.join(outpath, '{}_{}.csv'.format(os.path.basename(atlas)[:-7], suffix))
+    data.to_csv(outpath, index=False)
+    return outpath 
+
+def getAndStoreROIFeats(atlas, brain, maxROI, outpath=None):    
+    v, f = getAllROIFeats(atlas, brain, maxROI)
+
+    ### Volume
+    roi_volumes_pd = pd.DataFrame(v.items(), columns=[['ROI', "Volume_mm3"]])
+    volOutpath = saveOutput(roi_volumes_pd, atlas, 'volumes')
+    
+    ### Radiomics
     features = list(sorted(filter(lambda k: k.startswith("original_"), f[0])))
     roi_features_pd = pd.DataFrame(f).T[features]
     roi_features_pd = roi_features_pd.rename_axis('ROI').reset_index() #make the index a column indicating ROI
+    radOutpath = saveOutput(roi_features_pd, atlas, 'radiomicsFeatures')
 
-    if outpath == None:
-        outpath = os.path.join(os.getcwd(), '{}_radiomicsFeatures.csv'.format(os.path.basename(aal)[:-7]))
-    elif os.isDir(outpath):
-        outpath = os.path.join(outpath, '{}_radiomicsFeatures.csv'.format(os.path.basename(aal)[:-7]))
-
-    print('I will first output the rad features to: {}'.format(outpath))
-
-    roi_features_pd.to_csv(outpath, index=False)
-
-    return outpath
+    return volOutpath, radOutpath
 
 if __name__ == "__main__":
     print('')

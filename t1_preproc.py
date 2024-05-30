@@ -79,9 +79,9 @@ def getMaxROI(atlas_path):
     return round(np.max(data))
 
 # Nipype nodes built on python-functions need to reimport libraries seperately
-def CalcRadiomicsFeats(patient_atlas_path, brain_atlas_path, maxROI, outDir_path=None):
+def CalcROIFeatures(patient_atlas_path, brain_path, maxROI, outDir_path=None):
     import radiomics_helper
-    return radiomics_helper.getAndStoreROIFeats(patient_atlas_path, brain_atlas_path, maxROI)
+    return radiomics_helper.getAndStoreROIFeats(patient_atlas_path, brain_path, maxROI, outDir_path)
 
 def buildWorkflow(patient_T1_path, template_path, segment_path, outDir, subjectID, test=False):
 
@@ -162,16 +162,17 @@ def buildWorkflow(patient_T1_path, template_path, segment_path, outDir, subjectI
     ########## END PREPROCESS T1W
 
 
-    ########## GET RADIOMICS FEATURES
+    ########## GET ROI FEATURES
     GetMaxROI_node = pe.Node(interface=util.Function(input_names=['atlas_path'], output_names=['max_roi'], function=getMaxROI), name='GetMaxROI')
     preproc.connect(segment_feed, 'segment', GetMaxROI_node, 'atlas_path')
 
-    GetRadio_node = pe.Node(interface=util.Function(input_names=['patient_atlas_path', 'brain_atlas_path', 'maxROI', 'outDir_path'], output_names=['outfile'], function=CalcRadiomicsFeats), name='CalculateRadiomics')
-    preproc.connect(antsAppTrfm, 'output_image', GetRadio_node, 'patient_atlas_path')
-    preproc.connect(fast_bias_extract, 'restored_image', GetRadio_node, 'brain_atlas_path')
-    preproc.connect(GetMaxROI_node, 'max_roi', GetRadio_node, 'maxROI')
-    preproc.connect(GetRadio_node, 'outfile', datasink, '{}.@radiomicsFeatures'.format(DATATYPE_SUBJECT_DIR))
-    ########## END GET RADIOMICS FEATURES
+    GetROIF_node = pe.Node(interface=util.Function(input_names=['patient_atlas_path', 'brain_path', 'maxROI', 'outDir_path'], output_names=['volOutpath', 'radOutpath'], function=CalcROIFeatures), name='CalculateROIFeatures')
+    preproc.connect(antsAppTrfm, 'output_image', GetROIF_node, 'patient_atlas_path')
+    preproc.connect(fast_bias_extract, 'restored_image', GetROIF_node, 'brain_path')
+    preproc.connect(GetMaxROI_node, 'max_roi', GetROIF_node, 'maxROI')
+    preproc.connect(GetROIF_node, 'radOutpath', datasink, '{}.@radiomicsFeatures'.format(DATATYPE_SUBJECT_DIR))
+    preproc.connect(GetROIF_node, 'volOutpath', datasink, '{}.@volume'.format(DATATYPE_SUBJECT_DIR))
+    ########## END GET ROI FEATURES
 
 
     return preproc
