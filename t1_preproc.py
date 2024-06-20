@@ -13,6 +13,7 @@ import time
 import radiomics_helper # Custom module
 
 DATATYPE_SUBJECT_DIR = 'anat'
+DATATYPE_FILE_SUFFIX = 'T1w'
 
 def makeParser():
     parser = argparse.ArgumentParser(

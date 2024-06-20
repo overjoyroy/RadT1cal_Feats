@@ -45,12 +45,15 @@ def getROIVolume(brain_path, roi_mask_path):
     # Ensure the ROI mask is binary (1 for ROI, 0 for background)
     roi_data = roi_data > 0
 
+    # Mask
+    t1_roi_data = t1_data * roi_data
+
     # Calculate the voxel volume (assuming the affine matrix has the voxel dimensions)
     voxel_dims = t1_img.header.get_zooms()
     voxel_volume = np.prod(voxel_dims)
 
     # Count the number of voxels in the ROI
-    num_voxels_in_roi = np.count_nonzero(roi_data)
+    num_voxels_in_roi = np.count_nonzero(t1_roi_data)
 
     # Calculate the total volume of the ROI
     roi_volume = num_voxels_in_roi * voxel_volume
