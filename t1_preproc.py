@@ -34,8 +34,8 @@ def makeParser():
                         help='Template to be used to register into patient space. Default is MNI152lin_T1_2mm_brain.nii.gz')
     parser.add_argument('-seg','--segment', nargs=1, required=False,
                         help='Atlas to be used to identify brain regions in patient space. This is used in conjunction with the template. Please ensure that the atlas is in the same space as the template. Default is the AALv3 template.')
-    parser.add_argument('-o','--ourDir', nargs=1, required=True,
-                        help='Path to the \'derivatives\' folder or chosen out folder. All results will be submitted to outDir/out/str_preproc/subject_id/...')
+    parser.add_argument('-o','--outDir', nargs=1, required=True,
+                        help='Path to the \'derivatives\' folder or chosen out folder.')
     parser.add_argument('--testmode', required=False, action='store_true',
                         help='Activates TEST_MODE to make pipeline finish faster for quicker debugging')
 
@@ -52,18 +52,20 @@ def vetArgNone(variable, default):
         return variable[0]
 
 def makeOutDir(outDirName, args, enforceBIDS=True):
-    outDir = ''
-    if os.path.basename(args.ourDir[0]) == 'derivatives':
-        outDir = os.path.join(args.ourDir[0], 'out', outDirName, args.subject_id[0])
-    elif args.ourDir[0] == args.parentDir[0]:
-        print("Your outdir is the same as your parent dir!")
-        print("Making a derivatives folder for you...")
-        outDir = os.path.join(args.ourDir[0], 'derivatives', 'out', outDirName, args.subject_id[0])
-    elif os.path.basename(args.ourDir[0]) == args.subject_id[0]:
-        print('The given out directory seems to be at a patient level rather than parent level')
-        print('It is hard to determine if your out directory is BIDS compliant')
-    elif 'derivatives' in args.ourDir[0]:
-        outDir = os.path.join(args.ourDir[0], outDirName, args.subject_id[0])
+    # outDir = ''
+    # if os.path.basename(args.outDir[0]) == 'derivatives':
+    #     outDir = os.path.join(args.outDir[0], outDirName, args.subject_id[0])
+    # elif args.outDir[0] == args.parentDir[0]:
+    #     print("Your outdir is the same as your parent dir!")
+    #     print("Making a derivatives folder for you...")
+    #     outDir = os.path.join(args.outDir[0], 'derivatives', outDirName, args.subject_id[0])
+    # elif os.path.basename(args.outDir[0]) == args.subject_id[0]:
+    #     print('The given out directory seems to be at a patient level rather than parent level')
+    #     print('It is hard to determine if your out directory is BIDS compliant')
+    # elif 'derivatives' in args.outDir[0]:
+    #     outDir = os.path.join(args.outDir[0], outDirName, args.subject_id[0])
+
+    outDir = os.path.join(args.outDir[0], outDirName, args.subject_id[0])
 
     if not os.path.exists(outDir):
         os.makedirs(outDir, exist_ok=True)
