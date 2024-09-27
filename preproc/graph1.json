@@ -1,0 +1,141 @@
+{
+    "groups": [
+        {
+            "name": "Group_00001",
+            "procs": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+            ],
+            "total": 8
+        }
+    ],
+    "links": [
+        {
+            "source": 0,
+            "target": 7,
+            "value": 1
+        },
+        {
+            "source": 2,
+            "target": 7,
+            "value": 1
+        },
+        {
+            "source": 3,
+            "target": 7,
+            "value": 1
+        },
+        {
+            "source": 4,
+            "target": 7,
+            "value": 1
+        },
+        {
+            "source": 5,
+            "target": 7,
+            "value": 1
+        },
+        {
+            "source": 6,
+            "target": 7,
+            "value": 1
+        },
+        {
+            "source": 0,
+            "target": 2,
+            "value": 1
+        },
+        {
+            "source": 2,
+            "target": 3,
+            "value": 1
+        },
+        {
+            "source": 3,
+            "target": 4,
+            "value": 1
+        },
+        {
+            "source": 3,
+            "target": 5,
+            "value": 1
+        },
+        {
+            "source": 4,
+            "target": 5,
+            "value": 1
+        },
+        {
+            "source": 5,
+            "target": 6,
+            "value": 1
+        },
+        {
+            "source": 3,
+            "target": 6,
+            "value": 1
+        },
+        {
+            "source": 1,
+            "target": 6,
+            "value": 1
+        }
+    ],
+    "maxN": 8,
+    "nodes": [
+        {
+            "group": 1,
+            "name": "0_reorient2std",
+            "report": "/tmp/tmpbgmuwbi3/preproc/reorient2std/_report/report.rst",
+            "result": "/tmp/tmpbgmuwbi3/preproc/reorient2std/result_reorient2std.pklz"
+        },
+        {
+            "group": 1,
+            "name": "1_GetMaxROI",
+            "report": "/tmp/tmpmf8xcphp/preproc/GetMaxROI/_report/report.rst",
+            "result": "/tmp/tmpmf8xcphp/preproc/GetMaxROI/result_GetMaxROI.pklz"
+        },
+        {
+            "group": 1,
+            "name": "2_bet",
+            "report": "/tmp/tmp7z0w9gmf/preproc/bet/_report/report.rst",
+            "result": "/tmp/tmp7z0w9gmf/preproc/bet/result_bet.pklz"
+        },
+        {
+            "group": 1,
+            "name": "3_fast",
+            "report": "/tmp/tmptok1b7up/preproc/fast/_report/report.rst",
+            "result": "/tmp/tmptok1b7up/preproc/fast/result_fast.pklz"
+        },
+        {
+            "group": 1,
+            "name": "4_antsRegistration",
+            "report": "/tmp/tmpah7cj54k/preproc/antsRegistration/_report/report.rst",
+            "result": "/tmp/tmpah7cj54k/preproc/antsRegistration/result_antsRegistration.pklz"
+        },
+        {
+            "group": 1,
+            "name": "5_antsApplyTransform",
+            "report": "/tmp/tmpx_1iyi8f/preproc/antsApplyTransform/_report/report.rst",
+            "result": "/tmp/tmpx_1iyi8f/preproc/antsApplyTransform/result_antsApplyTransform.pklz"
+        },
+        {
+            "group": 1,
+            "name": "6_CalculateROIFeatures",
+            "report": "/tmp/tmps4psq7cc/preproc/CalculateROIFeatures/_report/report.rst",
+            "result": "/tmp/tmps4psq7cc/preproc/CalculateROIFeatures/result_CalculateROIFeatures.pklz"
+        },
+        {
+            "group": 1,
+            "name": "7_sinker",
+            "report": "/tmp/tmpngrospbv/preproc/sinker/_report/report.rst",
+            "result": "/tmp/tmpngrospbv/preproc/sinker/result_sinker.pklz"
+        }
+    ]
+}

@@ -63,7 +63,7 @@ def getROIVolume(brain_path, roi_mask_path):
 def getAllROIFeats(atlas, brain, maxROI):    
     featVecs = {}
     volVecs  = {}
-    for i in range(0,maxROI+1):
+    for i in range(1, maxROI+1): # start at atlas val 1 because 0 is null
         roi_mask = create_binaryROI_mask(atlas, i, output_path = os.getcwd())
         if roi_mask == None:
             continue
@@ -102,7 +102,7 @@ def getAndStoreROIFeats(atlas, brain, maxROI, outpath=None):
     volOutpath = saveOutput(roi_volumes_pd, atlas, 'volumes')
     
     ### Radiomics
-    features = list(sorted(filter(lambda k: k.startswith("original_"), f[0])))
+    features = list(sorted(filter(lambda k: k.startswith("original_"), f[1])))
     roi_features_pd = pd.DataFrame(f).T[features]
     roi_features_pd = roi_features_pd.rename_axis('ROI').reset_index() #make the index a column indicating ROI
     radOutpath = saveOutput(roi_features_pd, atlas, 'radiomicsFeatures')
