@@ -199,16 +199,19 @@ def main():
     if TEST_MODE:
         print("!!YOU ARE USING TEST MODE!!")
 
-    for i in os.listdir(data_dir):
-        if i[:3] == 'ses':
-            if session == None:
-                raise Exception("Your data is sorted into sessions but you did not indicate a session to process. Please provide the Session.")
+    print('session: {}'.format(args.session_id))
+    # for i in os.listdir(os.path.join(data_dir, args.subject_id[0])):
+    #     if 'ses-' in i:
+    #         if session == None:
+    #             raise Exception("Your data is sorted into sessions but you did not indicate a session to process. Please provide the Session.")
+
 
     if session != None:
-        patient_T1_dir = os.path.join(data_dir, session, args.subject_id[0], DATATYPE_SUBJECT_DIR)
+        patient_T1_dir = os.path.join(data_dir, args.subject_id[0], args.session_id[0], DATATYPE_SUBJECT_DIR)
     else:
         patient_T1_dir = os.path.join(data_dir, args.subject_id[0], DATATYPE_SUBJECT_DIR)
 
+    print('patient_T1_dir: {}'.format(patient_T1_dir))
     ## The following behavior only takes the first T1 seen in the directory. 
     ## The code could be expanded to account for multiple runs
     patient_T1_paths = []
