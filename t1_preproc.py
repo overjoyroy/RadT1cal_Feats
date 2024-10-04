@@ -41,6 +41,50 @@ def makeParser():
 
     return parser 
 
+def vet_inputs(args):
+    """
+    Takes the parsed arguments from the user, checks them, and ensures that the paths are absolute.
+    
+    Parameters:
+    args (argparse.Namespace): Parsed arguments from argparse.
+    
+    Returns:
+    argparse.Namespace: The updated arguments with absolute paths where applicable.
+    """
+    # Convert parent directory to absolute path if it's relative
+    args.parentDir = [os.path.abspath(os.path.expanduser(args.parentDir[0]))]
+    
+    # Convert output directory to absolute path if it's relative
+    args.outDir = [os.path.abspath(os.path.expanduser(args.outDir[0]))]
+    if not os.path.exists(args.outDir[0]):
+        print("Output directory does not currently exist. Making it now.")
+        os.makedirs(args.outDir[0], exist_ok=True)
+    
+    # Convert template path to absolute if provided and relative
+    if args.template:
+        args.template = [os.path.abspath(os.path.expanduser(args.template[0]))]
+    else:
+        args.template = ['/app/Template/MNI152lin_T1_2mm_brain.nii.gz']
+    
+    # Convert segmentation atlas path to absolute if provided and relative
+    if args.segment:
+        args.segment = [os.path.abspath(os.path.expanduser(args.segment[0]))]
+    else:
+        args.template = ['/app/Template/aal2.nii.gz']
+    
+    # Validate subject ID
+    if not args.subject_id or not isinstance(args.subject_id[0], str):
+        raise ValueError("Subject ID is missing or invalid. It should be in the form 'sub-#+' ")
+    
+    # Validate session ID if provided
+    if args.session_id and not isinstance(args.session_id[0], str):
+        raise ValueError("Session ID is invalid. It should be in the form 'ses-#+' ")
+    elif not args.session_id :
+        for i in os.listdir(os.path.join(args.parentDir[0], args.subject_id[0])):
+            if 'ses-' in i:
+                ValueError("Session ID is invalid. Your data seems to be organized by sessions but one was not provided.")
+    
+    return args
 
 # This was developed instead of using the default parameter in the argparser
 # bc argparser only returns a list or None and you can't do None[0]. 
@@ -114,15 +158,15 @@ def buildWorkflow(patient_T1_path, template_path, segment_path, outDir, subjectI
     preproc.connect(input_node, 'T1w', reorient2std_node, 'in_file')
     preproc.connect(reorient2std_node, 'out_file', datasink, '{}.@reorient'.format(DATASINK_PREFIX))
 
-    # Brain Extraction, 
-    brain_extract = pe.Node(interface=fsl.BET(frac=0.50, mask=True, robust=True), name='bet')
-    preproc.connect(reorient2std_node, 'out_file', brain_extract, 'in_file')
-    preproc.connect(brain_extract, 'out_file', datasink, '{}.@brain'.format(DATASINK_PREFIX))
-
     # FSL Fast used for bias field correction
     fast_bias_extract = pe.Node(interface=fsl.FAST(output_biascorrected=True), name='fast')
-    preproc.connect(brain_extract, 'out_file', fast_bias_extract, 'in_files')
+    preproc.connect(reorient2std_node, 'out_file', fast_bias_extract, 'in_files')
     preproc.connect(fast_bias_extract, 'restored_image', datasink, '{}.@nobias'.format(DATASINK_PREFIX))
+
+    # Brain Extraction, 
+    brain_extract = pe.Node(interface=fsl.BET(frac=0.50, mask=True, robust=True), name='bet')
+    preproc.connect(fast_bias_extract, 'restored_image', brain_extract, 'in_file')
+    preproc.connect(brain_extract, 'out_file', datasink, '{}.@brain'.format(DATASINK_PREFIX))
 
     # ants for both linear and nonlinear registration
     antsReg = pe.Node(interface=ants.Registration(), name='antsRegistration')
@@ -149,7 +193,7 @@ def buildWorkflow(patient_T1_path, template_path, segment_path, outDir, subjectI
     antsReg.inputs.output_warped_image = 'output_warped_image.nii.gz'
 
     preproc.connect(template_feed, 'template', antsReg, 'moving_image')
-    preproc.connect(fast_bias_extract, 'restored_image', antsReg, 'fixed_image')
+    preproc.connect(brain_extract, 'out_file', antsReg, 'fixed_image')
     preproc.connect(antsReg, 'warped_image', datasink, '{}.@warpedTemplate'.format(DATASINK_PREFIX))
 
     antsAppTrfm = pe.Node(interface=ants.ApplyTransforms(), name='antsApplyTransform')
@@ -158,7 +202,7 @@ def buildWorkflow(patient_T1_path, template_path, segment_path, outDir, subjectI
     antsAppTrfm.inputs.default_value = 0
 
     preproc.connect(segment_feed, 'segment', antsAppTrfm, 'input_image')
-    preproc.connect(fast_bias_extract, 'restored_image', antsAppTrfm, 'reference_image')
+    preproc.connect(brain_extract, 'out_file', antsAppTrfm, 'reference_image')
     preproc.connect(antsReg, 'reverse_forward_transforms', antsAppTrfm, 'transforms')
     preproc.connect(antsReg, 'reverse_forward_invert_flags', antsAppTrfm, 'invert_transform_flags')
     preproc.connect(antsAppTrfm, 'output_image', datasink, '{}.@warpedAtlas'.format(DATASINK_PREFIX))
@@ -171,7 +215,7 @@ def buildWorkflow(patient_T1_path, template_path, segment_path, outDir, subjectI
 
     GetROIF_node = pe.Node(interface=util.Function(input_names=['patient_atlas_path', 'brain_path', 'maxROI', 'outDir_path'], output_names=['volOutpath', 'radOutpath'], function=CalcROIFeatures), name='CalculateROIFeatures')
     preproc.connect(antsAppTrfm, 'output_image', GetROIF_node, 'patient_atlas_path')
-    preproc.connect(fast_bias_extract, 'restored_image', GetROIF_node, 'brain_path')
+    preproc.connect(brain_extract, 'out_file', GetROIF_node, 'brain_path')
     preproc.connect(GetMaxROI_node, 'max_roi', GetROIF_node, 'maxROI')
     preproc.connect(GetROIF_node, 'radOutpath', datasink, '{}.@radiomicsFeatures'.format(DATASINK_PREFIX))
     preproc.connect(GetROIF_node, 'volOutpath', datasink, '{}.@volume'.format(DATASINK_PREFIX))
@@ -188,6 +232,7 @@ def main():
     ################################################################################
     parser = makeParser()
     args   = parser.parse_args()
+    args   = vet_inputs(args)
     data_dir      = os.path.abspath(os.path.expanduser(args.parentDir[0]))
     outDir        = ''
     outDirName    = 'RadT1cal_Features'
@@ -195,15 +240,14 @@ def main():
     template_path = vetArgNone(args.template, '/app/Template/MNI152lin_T1_2mm_brain.nii.gz') #path in docker container
     segment_path  = vetArgNone(args.segment, '/app/Template/aal2.nii.gz') #path in docker container
     enforceBIDS   = True
-    TEST_MODE     = args.testmode
-    if TEST_MODE:
+    if args.testmode:
         print("!!YOU ARE USING TEST MODE!!")
 
-    print('session: {}'.format(args.session_id))
-    # for i in os.listdir(os.path.join(data_dir, args.subject_id[0])):
-    #     if 'ses-' in i:
-    #         if session == None:
-    #             raise Exception("Your data is sorted into sessions but you did not indicate a session to process. Please provide the Session.")
+
+    for i in os.listdir(os.path.join(data_dir, args.subject_id[0])):
+        if 'ses-' in i:
+            if session == None:
+                raise Exception("Your data is sorted into sessions but you did not indicate a session to process. Please provide the Session.")
 
 
     if session != None:
@@ -211,7 +255,7 @@ def main():
     else:
         patient_T1_dir = os.path.join(data_dir, args.subject_id[0], DATATYPE_SUBJECT_DIR)
 
-    print('patient_T1_dir: {}'.format(patient_T1_dir))
+
     ## The following behavior only takes the first T1 seen in the directory. 
     ## The code could be expanded to account for multiple runs
     patient_T1_paths = []
@@ -231,7 +275,7 @@ def main():
         for t1_path in patient_T1_paths:
             filename_noext = os.path.basename(t1_path).split('.')[0]
             outDir = makeOutDir(outDirName, args, enforceBIDS)
-            preproc = buildWorkflow(t1_path, template_path, segment_path, outDir, args.subject_id[0], test=TEST_MODE)
+            preproc = buildWorkflow(t1_path, template_path, segment_path, outDir, args.subject_id[0], test=args.testmode)
             tic     = time.time()
             preproc.run()
             toc     = time.time()

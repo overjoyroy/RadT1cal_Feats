@@ -12,3 +12,6 @@ __pycache__/
 venv/
 env/
 .DS_Store
+
+# workflow name
+preproc
