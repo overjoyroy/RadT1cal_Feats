@@ -1,5 +1,7 @@
 FROM jor115/neurodocker
 
+RUN apt-get update && apt-get install -y bc
+
 RUN python3 -m pip install \
 	pyradiomics
 

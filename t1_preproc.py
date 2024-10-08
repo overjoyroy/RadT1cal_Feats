@@ -24,7 +24,7 @@ def makeParser():
     parser.add_argument('--version', action='version', version='%(prog)s 0.1')
     parser.add_argument('-p','--parentDir', nargs=1, required=True,
                         help='Path to the parent data directory. BIDS compatible datasets are encouraged.')
-    parser.add_argument('-sid','--subject_id', nargs=1, required=True,
+    parser.add_argument('-sid','--subject_id', nargs=1, required=False,
                         help='Subject ID used to indicate which patient to preprocess')
     # parser.add_argument('-spath','--subject_t1_path', nargs=1, required=False,
     #                     help='Path to a subjects T1 scan. This is not necessary if subject ID is provided as the T1 will be automatically found using the T1w.nii.gz extension')
