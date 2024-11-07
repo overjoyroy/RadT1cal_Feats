@@ -70,7 +70,7 @@ def vet_inputs(args):
     if args.segment:
         args.segment = [os.path.abspath(os.path.expanduser(args.segment[0]))]
     else:
-        args.template = ['/app/Template/aal2.nii.gz']
+        args.segment = ['/app/Template/aal2.nii.gz']
     
     # Validate subject ID
     if not args.subject_id or not isinstance(args.subject_id[0], str):
