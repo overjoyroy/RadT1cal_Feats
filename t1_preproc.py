@@ -168,6 +168,20 @@ def buildWorkflow(patient_T1_path, template_path, segment_path, outDir, subjectI
     preproc.connect(fast_bias_extract, 'restored_image', brain_extract, 'in_file')
     preproc.connect(brain_extract, 'out_file', datasink, '{}.@brain'.format(DATASINK_PREFIX))
 
+    # FSL affine is better than ANTs affine imo
+    flt = pe.Node(interface=fsl.FLIRT(), name='flirt')
+    preproc.connect(template_feed, 'template', flt, 'in_file')
+    preproc.connect(brain_extract, 'out_file', flt, 'reference')
+
+    # apply same transformation to segment
+    applyflt = pe.Node(interface=fsl.FLIRT(), name='applyflirt')
+    applyflt.inputs.apply_xfm = True
+    applyflt.inputs.interp = 'nearestneighbour'
+    preproc.connect(segment_feed, 'segment', applyflt, 'in_file')
+    preproc.connect(brain_extract, 'out_file', applyflt, 'reference')
+    preproc.connect(flt, 'out_matrix_file', applyflt, 'in_matrix_file')
+    
+
     # ants for both linear and nonlinear registration
     antsReg = pe.Node(interface=ants.Registration(), name='antsRegistration')
     antsReg.inputs.transforms = ['Affine', 'SyN']
@@ -192,7 +206,7 @@ def buildWorkflow(patient_T1_path, template_path, segment_path, outDir, subjectI
     antsReg.inputs.use_histogram_matching = [True, True] # This is the default
     antsReg.inputs.output_warped_image = 'output_warped_image.nii.gz'
 
-    preproc.connect(template_feed, 'template', antsReg, 'moving_image')
+    preproc.connect(flt, 'out_file', antsReg, 'moving_image')
     preproc.connect(brain_extract, 'out_file', antsReg, 'fixed_image')
     preproc.connect(antsReg, 'warped_image', datasink, '{}.@warpedTemplate'.format(DATASINK_PREFIX))
 
@@ -201,7 +215,7 @@ def buildWorkflow(patient_T1_path, template_path, segment_path, outDir, subjectI
     antsAppTrfm.inputs.interpolation = 'NearestNeighbor'
     antsAppTrfm.inputs.default_value = 0
 
-    preproc.connect(segment_feed, 'segment', antsAppTrfm, 'input_image')
+    preproc.connect(applyflt, 'out_file', antsAppTrfm, 'input_image')
     preproc.connect(brain_extract, 'out_file', antsAppTrfm, 'reference_image')
     preproc.connect(antsReg, 'reverse_forward_transforms', antsAppTrfm, 'transforms')
     preproc.connect(antsReg, 'reverse_forward_invert_flags', antsAppTrfm, 'invert_transform_flags')
