@@ -290,6 +290,7 @@ def main():
             filename_noext = os.path.basename(t1_path).split('.')[0]
             outDir = makeOutDir(outDirName, args, enforceBIDS)
             preproc = buildWorkflow(t1_path, template_path, segment_path, outDir, args.subject_id[0], test=args.testmode)
+            # preproc.write_graph(graph2use='exec', format='svg')
             tic     = time.time()
             preproc.run()
             toc     = time.time()
