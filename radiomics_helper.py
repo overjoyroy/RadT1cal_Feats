@@ -74,10 +74,7 @@ def getAllROIFeats(atlas, brain, maxROI):
         
         # Radiomics
         extractor = radiomics.featureextractor.RadiomicsFeatureExtractor()
-        extractor.disableAllFeatures()
-        extractor.enableFeatureClassByName('firstorder')
-        # Alternative; only enable 'Mean' and 'Skewness' features in firstorder
-        # extractor.enableFeaturesByName(firstorder=['Mean', 'Skewness'])
+        extractor.enableAllFeatures()
         featureVector = extractor.execute(brain, roi_mask)
         featVecs[i] = featureVector
 
@@ -89,7 +86,7 @@ def getAllROIFeats(atlas, brain, maxROI):
 def saveOutput(data, atlas, suffix, outpath=None):
     if outpath == None:
         outpath = os.path.join(os.getcwd(), '{}_{}.csv'.format(os.path.basename(atlas)[:-7], suffix))
-    elif os.isDir(outpath):
+    elif os.path.isdir(outpath):
         outpath = os.path.join(outpath, '{}_{}.csv'.format(os.path.basename(atlas)[:-7], suffix))
     data.to_csv(outpath, index=False)
     return outpath 
