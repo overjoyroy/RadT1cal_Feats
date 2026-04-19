@@ -82,7 +82,7 @@ def vet_inputs(args):
     elif not args.session_id :
         for i in os.listdir(os.path.join(args.parentDir[0], args.subject_id[0])):
             if 'ses-' in i:
-                ValueError("Session ID is invalid. Your data seems to be organized by sessions but one was not provided.")
+                raise ValueError("Session ID is invalid. Your data seems to be organized by sessions but one was not provided.")
     
     return args
 
@@ -287,14 +287,13 @@ def main():
         print('Error: No {} images found for the specified patient. The pipeline cannot proceed. Please ensure that all filenames adhere to the BIDS standard. No NIFTI files with the extension \'_{}.nii[.gz]\' were detected. Exiting...'.format(DATATYPE_FILE_SUFFIX.upper(), DATATYPE_FILE_SUFFIX))
     else:
         for t1_path in patient_T1_paths:
-            filename_noext = os.path.basename(t1_path).split('.')[0]
             outDir = makeOutDir(outDirName, args, enforceBIDS)
             preproc = buildWorkflow(t1_path, template_path, segment_path, outDir, args.subject_id[0], test=args.testmode)
             # preproc.write_graph(graph2use='exec', format='svg')
             tic     = time.time()
             preproc.run()
             toc     = time.time()
-    print('\nElapsed Time to Preprocess: {}s\n'.format(tic-toc))
+            print('\nElapsed Time to Preprocess: {}s\n'.format(toc-tic))
 
 
 if __name__ == "__main__":

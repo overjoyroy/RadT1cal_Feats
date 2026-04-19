@@ -77,6 +77,23 @@ docker run -v [data_dir_path]:/data/my_data -v [output_path]:/data/output --rm -
 ```
 *Note: The docker run command is identical to the one used for running a locally built container, but you do not need to download the source code or build the container locally.*
 
+## Expected Runtimes
+
+The table below shows approximate per-step runtimes for a standard T1w scan with the AALv2 atlas (120 ROIs). Times were measured using `--testmode`, which reduces ANTs iterations significantly — full-mode registration will be longer.
+
+| Step | Approximate Time (`--testmode`) |
+|------|---------------------------------|
+| Reorientation | ~1s |
+| Bias correction (FSL FAST) | ~5–6 min |
+| Skull stripping (FSL BET) | ~7s |
+| Affine registration (FSL FLIRT) | ~8s |
+| Nonlinear registration (ANTs SyN) | ~2 min |
+| Atlas warp (ANTs ApplyTransforms) | ~2s |
+| Radiomic feature extraction (120 ROIs) | ~3 min |
+| **Total (`--testmode`)** | **~11 min** |
+
+> **Note:** In full mode, the ANTs nonlinear registration step runs up to 1500 iterations and will take considerably longer. FAST bias correction and pyradiomics extraction are the other main time costs and are unaffected by `--testmode`.
+
 ## Development Status
 
 This tool is a work in progress. It is currently fully functional but is undergoing refinement to enhance user flexibility and input handling.

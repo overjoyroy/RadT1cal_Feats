@@ -16,3 +16,6 @@ env/
 
 # workflow name
 preproc
+
+# test outputs
+test_output*/

@@ -95,11 +95,11 @@ def getAndStoreROIFeats(atlas, brain, maxROI, outpath=None):
     v, f = getAllROIFeats(atlas, brain, maxROI)
 
     ### Volume
-    roi_volumes_pd = pd.DataFrame(v.items(), columns=[['ROI', "Volume_mm3"]])
+    roi_volumes_pd = pd.DataFrame(v.items(), columns=['ROI', "Volume_mm3"])
     volOutpath = saveOutput(roi_volumes_pd, atlas, 'volumes')
     
     ### Radiomics
-    features = list(sorted(filter(lambda k: k.startswith("original_"), f[1])))
+    features = list(sorted(filter(lambda k: k.startswith("original_"), f[next(iter(f))])))
     roi_features_pd = pd.DataFrame(f).T[features]
     roi_features_pd = roi_features_pd.rename_axis('ROI').reset_index() #make the index a column indicating ROI
     radOutpath = saveOutput(roi_features_pd, atlas, 'radiomicsFeatures')
